@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline Challenge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #7c3aed;
+      --primary-light: #ede9fe;
+      --secondary: #f59e0b;
+      --secondary-light: #fef3c7;
+      --accent: #0d9488;
+      --accent-light: #ccfbf1;
+      --bg: #f3f0ff;
+      --card: #ffffff;
+      --border: #ddd6fe;
+      --muted: #7c6fad;
+      --green: #16a34a;
+      --green-light: #f0fdf4;
+      --green-border: #86efac;
+      --red: #dc2626;
+      --red-light: #fff1f2;
+      --red-border: #fca5a5;
+      --orange: #ea580c;
+      --orange-light: #fff7ed;
+      --orange-border: #fdba74;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: #1e1b4b;
+    }
+
+    h1, .heading { font-family: 'Fredoka One', cursive; }
+
+    /* ── HEADER ── */
+    #app-header {
+      background: var(--card);
+      border-bottom: 2px solid var(--border);
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    #app-header h1 { font-size: 1.4rem; color: var(--primary); }
+
+    /* ── SCREENS ── */
+    .screen { display: none; max-width: 680px; margin: 0 auto; padding: 20px 16px 60px; }
+    .screen.active { display: block; }
+
+    /* ── START SCREEN ── */
+    #start-screen { text-align: center; }
+    #start-screen .hero-emoji { font-size: 5rem; margin: 24px 0 8px; }
+    #start-screen h2 { font-family: 'Fredoka One', cursive; font-size: 2.6rem; color: var(--primary); margin-bottom: 10px; }
+    #start-screen .subtitle { color: var(--muted); font-size: 1.05rem; font-weight: 700; max-width: 380px; margin: 0 auto 28px; }
+
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+    .feature-card { background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 16px 10px; text-align: center; }
+    .feature-card .icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .feature-card .label { font-weight: 800; font-size: .85rem; }
+    .feature-card .desc { color: var(--muted); font-size: .75rem; margin-top: 2px; }
+
+    .section-label { font-family: 'Fredoka One', cursive; font-size: 1.25rem; margin-bottom: 12px; }
+
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .mode-card {
+      background: var(--card); border: 2px solid var(--border); border-radius: 18px;
+      padding: 20px 12px; cursor: pointer; text-align: center; transition: all .2s;
+    }
+    .mode-card:hover { border-color: var(--primary); background: var(--primary-light); }
+    .mode-card.selected-normal { border-color: var(--primary); background: var(--primary-light); transform: scale(1.04); box-shadow: 0 4px 16px rgba(124,58,237,.2); }
+    .mode-card.selected-hard { border-color: var(--orange); background: var(--orange-light); transform: scale(1.04); box-shadow: 0 4px 16px rgba(234,88,12,.2); }
+    .mode-card .mode-icon { font-size: 2rem; margin-bottom: 8px; }
+    .mode-card .mode-title { font-family: 'Fredoka One', cursive; font-size: 1.2rem; }
+    .mode-card.selected-normal .mode-title { color: var(--primary); }
+    .mode-card.selected-hard .mode-title { color: var(--orange); }
+    .mode-card .mode-desc { color: var(--muted); font-size: .78rem; margin-top: 4px; font-weight: 700; }
+
+    #time-picker { margin-bottom: 24px; display: none; }
+    #time-picker.visible { display: block; }
+    #time-picker .section-label { color: var(--orange); }
+    .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .time-btn {
+      background: var(--card); border: 2px solid var(--border); border-radius: 14px;
+      padding: 12px 8px; cursor: pointer; text-align: center; transition: all .2s;
+    }
+    .time-btn:hover { border-color: var(--orange-border); }
+    .time-btn.selected { border-color: var(--orange); background: var(--orange-light); transform: scale(1.05); }
+    .time-btn .time-val { font-family: 'Fredoka One', cursive; font-size: 1.6rem; }
+    .time-btn.selected .time-val { color: var(--orange); }
+    .time-btn .time-desc { font-size: .75rem; color: var(--muted); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      font-family: 'Fredoka One', cursive; font-size: 1.2rem; border: none;
+      border-radius: 999px; padding: 14px 36px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px; transition: all .2s;
+      box-shadow: 0 4px 14px rgba(0,0,0,.15);
+    }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #6d28d9; }
+    .btn-secondary { background: var(--secondary); color: #78350f; }
+    .btn-secondary:hover { background: #d97706; }
+    .btn-orange { background: var(--orange); color: #fff; }
+    .btn-orange:hover { background: #c2410c; }
+    .btn-outline { background: var(--card); color: #1e1b4b; border: 2px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+    .btn-outline:hover { border-color: var(--primary); }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-green:hover { background: #15803d; }
+    .btn-center { display: flex; justify-content: center; margin-top: 24px; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+
+    /* ── SCORE BAR ── */
+    #score-bar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+      gap: 12px; margin-bottom: 20px;
+    }
+    .pill {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 999px; padding: 8px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      font-family: 'Fredoka One', cursive; font-size: 1.1rem;
+    }
+    .pill.round-pill { border-color: var(--primary); color: var(--primary); }
+    .pill.hard-pill { border-color: var(--orange); color: var(--orange); }
+    #timer-pill { transition: background .3s, border-color .3s; }
+    #timer-pill.warning { background: #fff7ed; border-color: var(--orange-border); color: var(--orange); }
+    #timer-pill.danger { background: var(--red-light); border-color: var(--red-border); color: var(--red); animation: pulse 1s infinite; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+    /* ── GAME BOARD ── */
+    #play-hint { text-align: center; color: var(--muted); font-weight: 800; font-size: .9rem; margin-bottom: 16px; }
+    #play-hint span { color: var(--primary); }
+
+    #cards-list { display: flex; flex-direction: column; gap: 12px; max-width: 520px; margin: 0 auto; }
+
+    .event-card {
+      border: 2px solid; border-radius: 16px;
+      padding: 16px 18px; display: flex; align-items: center; gap: 14px;
+      cursor: grab; user-select: none;
+      box-shadow: 0 3px 10px rgba(0,0,0,.08);
+      transition: box-shadow .2s, transform .15s;
+      background: white;
+    }
+    .event-card:active { cursor: grabbing; }
+    .event-card.dragging { opacity: .5; }
+    .event-card.drag-over { outline: 3px dashed var(--primary); outline-offset: 2px; }
+    .event-card.disabled { cursor: default; opacity: .85; }
+
+    .card-num { font-family: 'Fredoka One', cursive; font-size: 1.8rem; flex-shrink: 0; }
+    .card-title { font-weight: 800; font-size: 1rem; line-height: 1.3; }
+    .grip { font-size: 1.2rem; flex-shrink: 0; color: #aaa; }
+
+    /* card colour variants */
+    .cc-0 { background: #f3e8ff; border-color: #d8b4fe; } .cc-0 .card-num { color: #7e22ce; }
+    .cc-1 { background: #fff7ed; border-color: #fed7aa; } .cc-1 .card-num { color: #c2410c; }
+    .cc-2 { background: #f0fdfa; border-color: #99f6e4; } .cc-2 .card-num { color: #0f766e; }
+    .cc-3 { background: #fdf2f8; border-color: #f9a8d4; } .cc-3 .card-num { color: #be185d; }
+    .cc-4 { background: #fefce8; border-color: #fde047; } .cc-4 .card-num { color: #854d0e; }
+    .cc-5 { background: #eff6ff; border-color: #93c5fd; } .cc-5 .card-num { color: #1d4ed8; }
+
+    /* ── RESULT PANEL ── */
+    #result-panel { margin-top: 24px; display: none; }
+    #result-panel.visible { display: block; }
+    .result-box {
+      border: 2px solid; border-radius: 18px; padding: 20px;
+      text-align: center; margin-bottom: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,.08);
+    }
+    .result-box.correct { background: var(--green-light); border-color: var(--green-border); }
+    .result-box.wrong { background: var(--red-light); border-color: var(--red-border); }
+    .result-box.timeout { background: var(--orange-light); border-color: var(--orange-border); }
+    .result-heading { font-family: 'Fredoka One', cursive; font-size: 1.6rem; margin-bottom: 10px; }
+    .result-heading.correct { color: var(--green); }
+    .result-heading.wrong { color: var(--red); }
+    .result-heading.timeout { color: var(--orange); }
+    .correct-list { margin-top: 10px; }
+    .correct-list p { font-size: .8rem; font-weight: 800; color: var(--muted); margin-bottom: 6px; }
+    .correct-list .cl-item { font-size: .88rem; font-weight: 700; display: flex; align-items: center; gap: 6px; justify-content: center; margin-bottom: 3px; }
+    .cl-num { font-family: 'Fredoka One', cursive; color: var(--primary); }
+    .cl-year { color: var(--muted); font-size: .8rem; }
+
+    .fun-fact-box {
+      background: var(--card); border: 2px solid var(--border); border-radius: 16px;
+      padding: 16px; text-align: center; font-weight: 800; font-size: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 14px;
+    }
+
+    /* ── FINAL SCREEN ── */
+    #final-screen { text-align: center; }
+    .final-emoji { font-size: 5rem; margin: 20px 0 12px; }
+    #final-screen h2 { font-family: 'Fredoka One', cursive; font-size: 2.8rem; color: var(--primary); margin-bottom: 6px; }
+    #final-screen .final-msg { color: var(--muted); font-weight: 700; font-size: 1rem; max-width: 360px; margin: 0 auto 28px; }
+    .hard-badge { display: inline-block; background: var(--orange-light); border: 2px solid var(--orange-border); border-radius: 999px; padding: 4px 20px; font-family: 'Fredoka One', cursive; color: var(--orange); font-size: 1rem; margin-bottom: 10px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; max-width: 440px; margin: 0 auto 32px; }
+    .stat-card { background: var(--card); border: 2px solid var(--border); border-radius: 18px; padding: 18px 10px; box-shadow: 0 3px 10px rgba(0,0,0,.08); }
+    .stat-icon { font-size: 1.6rem; margin-bottom: 6px; }
+    .stat-val { font-family: 'Fredoka One', cursive; font-size: 2rem; }
+    .stat-label { color: var(--muted); font-size: .75rem; font-weight: 800; margin-top: 2px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 480px) {
+      #start-screen h2 { font-size: 2rem; }
+      .feature-grid { grid-template-columns: repeat(3,1fr); gap: 8px; }
+      .mode-grid { gap: 10px; }
+      .stats-grid { gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app-header">
+  <h1 id="header-title">⏳ Timeline Challenge</h1>
+</div>
+
+<!-- ══════════════ START SCREEN ══════════════ -->
+<div id="start-screen" class="screen active">
+  <div class="hero-emoji">⏳</div>
+  <h2>Timeline Challenge</h2>
+  <p class="subtitle">Can you put history in the right order? Drag events from earliest to latest!</p>
+
+  <div class="feature-grid">
+    <div class="feature-card"><div class="icon">↕️</div><div class="label">Drag & Drop</div><div class="desc">Arrange events in order</div></div>
+    <div class="feature-card"><div class="icon">⏱️</div><div class="label">Beat the Clock</div><div class="desc">How fast can you go?</div></div>
+    <div class="feature-card"><div class="icon">🏆</div><div class="label">Score Points</div><div class="desc">Get them all right!</div></div>
+  </div>
+
+  <p class="section-label">Choose Your Mode</p>
+  <div class="mode-grid">
+    <div class="mode-card" id="mode-normal" onclick="selectMode('normal')">
+      <div class="mode-icon">⚡</div>
+      <div class="mode-title">Normal</div>
+      <div class="mode-desc">No time limit — play at your own pace</div>
+    </div>
+    <div class="mode-card" id="mode-hard" onclick="selectMode('hard')">
+      <div class="mode-icon">🔥</div>
+      <div class="mode-title">Hard 🔥</div>
+      <div class="mode-desc">Time limit per round!</div>
+    </div>
+  </div>
+
+  <div id="time-picker">
+    <p class="section-label">⏰ Time per Round</p>
+    <div class="time-grid">
+      <div class="time-btn" id="t60" onclick="selectTime(60)"><div class="time-val">1:00</div><div class="time-desc">Comfortable</div></div>
+      <div class="time-btn selected" id="t90" onclick="selectTime(90)"><div class="time-val">1:30</div><div class="time-desc">Moderate</div></div>
+      <div class="time-btn" id="t120" onclick="selectTime(120)"><div class="time-val">2:00</div><div class="time-desc">Relaxed</div></div>
+    </div>
+  </div>
+
+  <div class="btn-center">
+    <button class="btn btn-primary" id="start-btn" onclick="startGame()" disabled>▶ Start Game</button>
+  </div>
+</div>
+
+<!-- ══════════════ PLAY SCREEN ══════════════ -->
+<div id="play-screen" class="screen">
+  <div id="score-bar">
+    <div class="pill" id="score-pill">🏆 <span id="score-val">0</span></div>
+    <div class="pill round-pill" id="round-pill">🎯 Round <span id="round-val">1</span>/<span id="total-val">10</span></div>
+    <div class="pill" id="timer-pill">⏱️ <span id="timer-val">00:00</span></div>
+  </div>
+
+  <p id="play-hint">Drag the cards from <span>earliest</span> to <span>latest</span></p>
+  <div id="cards-list"></div>
+
+  <div class="btn-center" id="submit-wrap">
+    <button class="btn btn-secondary" onclick="submitOrder()">📨 Submit Order</button>
+  </div>
+
+  <div id="result-panel">
+    <div class="result-box" id="result-box">
+      <div class="result-heading" id="result-heading"></div>
+      <div class="correct-list" id="correct-list"></div>
+    </div>
+    <div class="fun-fact-box" id="fun-fact-box"></div>
+    <div class="btn-center">
+      <button class="btn btn-primary" id="next-btn" onclick="nextRound()">Next Round →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ FINAL SCREEN ══════════════ -->
+<div id="final-screen" class="screen">
+  <div class="final-emoji" id="final-emoji">🏆</div>
+  <div id="hard-badge" class="hard-badge" style="display:none">🔥 Hard Mode</div>
+  <h2>Game Over!</h2>
+  <p class="final-msg" id="final-msg"></p>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-val" id="stat-score"></div><div class="stat-label">Score</div></div>
+    <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-val" id="stat-acc"></div><div class="stat-label">Accuracy</div></div>
+    <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-val" id="stat-time"></div><div class="stat-label">Time</div></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="playAgain()">🔄 Play Again</button>
+    <button class="btn btn-outline" onclick="goHome()">🏠 Home</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  GAME DATA
+// ══════════════════════════════════════════════
+const ROUNDS = [
+  { events:[{t:"Columbus discovers America",y:1492},{t:"Mughal Empire founded in India",y:1526},{t:"Shakespeare writes Hamlet",y:1600}], fact:"🧭 Columbus thought he had reached India — that's why Native Americans were called 'Indians'!" },
+  { events:[{t:"American Revolution begins",y:1775},{t:"French Revolution starts",y:1789},{t:"Napoleon becomes Emperor",y:1804}], fact:"🇫🇷 The French Revolution was partly inspired by the success of the American Revolution!" },
+  { events:[{t:"First railway in India opens",y:1853},{t:"Alexander Graham Bell invents telephone",y:1876},{t:"Wright Brothers' first flight",y:1903}], fact:"✈️ The Wright Brothers' first flight lasted only 12 seconds — shorter than a TikTok video!" },
+  { events:[{t:"World War I begins",y:1914},{t:"Jallianwala Bagh massacre",y:1919},{t:"Quit India Movement",y:1942}], fact:"🇮🇳 Mahatma Gandhi's 'Quit India' speech in 1942 inspired millions to fight for freedom!" },
+  { events:[{t:"World War II ends",y:1945},{t:"India gains independence",y:1947},{t:"First man on the Moon",y:1969}], fact:"🌙 Neil Armstrong's first step on the Moon was watched by 600 million people on TV!" },
+  { events:[{t:"Gutenberg invents printing press",y:1440},{t:"Isaac Newton discovers gravity",y:1687},{t:"Benjamin Franklin's lightning experiment",y:1752},{t:"First steam engine by James Watt",y:1769}], fact:"🍎 Newton didn't discover gravity because an apple hit his head — he just watched one fall!" },
+  { events:[{t:"Mahatma Gandhi born",y:1869},{t:"Albert Einstein born",y:1879},{t:"Einstein's famous equation E=mc²",y:1905},{t:"Gandhi leads Salt March",y:1930}], fact:"🧂 Gandhi walked 240 miles to the sea just to make salt and protest British tax laws!" },
+  { events:[{t:"First computer (ENIAC) built",y:1945},{t:"First satellite Sputnik launched",y:1957},{t:"Internet invented (ARPANET)",y:1969},{t:"First personal computer sold",y:1975}], fact:"💻 The first computer ENIAC weighed 30 tons — heavier than 5 elephants!" },
+  { events:[{t:"Great Wall of China built",y:-700},{t:"Roman Empire at its peak",y:117},{t:"Viking Age begins",y:793},{t:"Marco Polo travels to China",y:1271}], fact:"🏯 The Great Wall of China is so long, it would take about 18 months to walk its entire length!" },
+  { events:[{t:"Berlin Wall falls",y:1989},{t:"World Wide Web goes public",y:1991},{t:"First smartphone (iPhone) released",y:2007},{t:"Mars rover Curiosity lands",y:2012},{t:"ChatGPT is released",y:2022}], fact:"🤖 The Mars rover Curiosity sings 'Happy Birthday' to itself every year on Mars — all alone!" },
+];
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let mode = null, timeLimitSec = 90;
+let roundIndex = 0, score = 0;
+let timerInterval = null, timerSeconds = 0, isHardMode = false;
+let currentOrder = []; // array of event objects in user's current order
+let submitted = false;
+
+// ── DRAG STATE ──
+let dragSrcIdx = null;
+
+// ══════════════════════════════════════════════
+//  START SCREEN
+// ══════════════════════════════════════════════
+function selectMode(m) {
+  mode = m;
+  document.getElementById('mode-normal').className = 'mode-card' + (m==='normal'?' selected-normal':'');
+  document.getElementById('mode-hard').className   = 'mode-card' + (m==='hard'  ?' selected-hard':'');
+  document.getElementById('time-picker').className = m==='hard' ? 'visible' : '';
+  const btn = document.getElementById('start-btn');
+  btn.disabled = false;
+  btn.className = 'btn ' + (m==='hard' ? 'btn-orange' : 'btn-primary');
+  btn.textContent = m==='hard' ? '🔥 Start Hard Mode' : '▶ Start Game';
+}
+
+function selectTime(sec) {
+  timeLimitSec = sec;
+  [60,90,120].forEach(s => {
+    document.getElementById('t'+s).className = 'time-btn' + (s===sec ? ' selected' : '');
+  });
+}
+
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  stopTimer();
+  mode = null;
+  document.getElementById('mode-normal').className = 'mode-card';
+  document.getElementById('mode-hard').className   = 'mode-card';
+  document.getElementById('time-picker').className = '';
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('start-btn').className = 'btn btn-primary';
+  document.getElementById('start-btn').textContent = '▶ Start Game';
+  document.getElementById('app-header').style.background = '';
+  document.getElementById('header-title').textContent = '⏳ Timeline Challenge';
+  document.getElementById('header-title').style.color = '';
+  showScreen('start-screen');
+}
+
+function playAgain() {
+  const lastMode = isHardMode ? 'hard' : 'normal';
+  goHome();
+  selectMode(lastMode);
+  startGame();
+}
+
+// ══════════════════════════════════════════════
+//  GAME LOGIC
+// ══════════════════════════════════════════════
+function startGame() {
+  isHardMode = mode === 'hard';
+  roundIndex = 0; score = 0;
+  document.getElementById('total-val').textContent = ROUNDS.length;
+
+  // Header style
+  if (isHardMode) {
+    document.getElementById('app-header').style.background = '#fff7ed';
+    document.getElementById('app-header').style.borderBottomColor = '#fdba74';
+    document.getElementById('header-title').textContent = '🔥 Hard Mode';
+    document.getElementById('header-title').style.color = '#ea580c';
+  } else {
+    document.getElementById('app-header').style.background = '';
+    document.getElementById('header-title').textContent = '⏳ Timeline Challenge';
+    document.getElementById('header-title').style.color = '';
+  }
+
+  showScreen('play-screen');
+  loadRound();
+}
+
+function loadRound() {
+  submitted = false;
+  const round = ROUNDS[roundIndex];
+  currentOrder = shuffle([...round.events]);
+
+  // Score bar
+  document.getElementById('score-val').textContent  = score;
+  document.getElementById('round-val').textContent  = roundIndex + 1;
+  document.getElementById('round-pill').className   = 'pill ' + (isHardMode ? 'hard-pill' : 'round-pill');
+
+  // Hide result, show submit
+  document.getElementById('result-panel').classList.remove('visible');
+  document.getElementById('submit-wrap').style.display = '';
+
+  renderCards();
+  startTimer();
+}
+
+function renderCards() {
+  const list = document.getElementById('cards-list');
+  list.innerHTML = '';
+  currentOrder.forEach((ev, i) => {
+    const card = document.createElement('div');
+    card.className = `event-card cc-${i % 6}`;
+    card.draggable = !submitted;
+    card.dataset.index = i;
+    card.innerHTML = `<span class="grip">⠿</span><span class="card-num">${i+1}</span><span class="card-title">${ev.t}</span>`;
+    if (submitted) card.classList.add('disabled');
+
+    card.addEventListener('dragstart', onDragStart);
+    card.addEventListener('dragover',  onDragOver);
+    card.addEventListener('dragleave', onDragLeave);
+    card.addEventListener('drop',      onDrop);
+    card.addEventListener('dragend',   onDragEnd);
+
+    // Touch support
+    addTouchDrag(card, i);
+
+    list.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  DRAG & DROP (mouse)
+// ══════════════════════════════════════════════
+function onDragStart(e) {
+  if (submitted) return;
+  dragSrcIdx = +this.dataset.index;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  this.classList.add('drag-over');
+}
+function onDragLeave() { this.classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  this.classList.remove('drag-over');
+  const destIdx = +this.dataset.index;
+  if (dragSrcIdx === null || dragSrcIdx === destIdx) return;
+  const moved = currentOrder.splice(dragSrcIdx, 1)[0];
+  currentOrder.splice(destIdx, 0, moved);
+  dragSrcIdx = null;
+  renderCards();
+}
+function onDragEnd() {
+  this.classList.remove('dragging');
+  document.querySelectorAll('.event-card').forEach(c => c.classList.remove('drag-over'));
+  dragSrcIdx = null;
+}
+
+// ══════════════════════════════════════════════
+//  TOUCH DRAG (mobile)
+// ══════════════════════════════════════════════
+function addTouchDrag(card, idx) {
+  let touchStartY = 0, clone = null, startIdx = idx;
+
+  card.addEventListener('touchstart', e => {
+    if (submitted) return;
+    touchStartY = e.touches[0].clientY;
+    clone = card.cloneNode(true);
+    clone.style.cssText = `position:fixed;left:${card.getBoundingClientRect().left}px;top:${card.getBoundingClientRect().top}px;width:${card.offsetWidth}px;opacity:.75;z-index:9999;pointer-events:none;transform:scale(1.04);`;
+    document.body.appendChild(clone);
+    card.style.opacity = '0.4';
+  }, { passive: true });
+
+  card.addEventListener('touchmove', e => {
+    if (!clone) return;
+    e.preventDefault();
+    const dy = e.touches[0].clientY - touchStartY;
+    clone.style.top = (card.getBoundingClientRect().top + dy) + 'px';
+
+    const cards = [...document.querySelectorAll('.event-card')];
+    const target = cards.find(c => {
+      if (c === card) return false;
+      const r = c.getBoundingClientRect();
+      const ty = e.touches[0].clientY;
+      return ty >= r.top && ty <= r.bottom;
+    });
+    cards.forEach(c => c.classList.remove('drag-over'));
+    if (target) target.classList.add('drag-over');
+  }, { passive: false });
+
+  card.addEventListener('touchend', e => {
+    if (!clone) return;
+    document.body.removeChild(clone); clone = null;
+    card.style.opacity = '';
+
+    const cards = [...document.querySelectorAll('.event-card')];
+    const target = cards.find(c => c.classList.contains('drag-over'));
+    cards.forEach(c => c.classList.remove('drag-over'));
+    if (target && target !== card) {
+      const destIdx = +target.dataset.index;
+      const moved = currentOrder.splice(startIdx, 1)[0];
+      currentOrder.splice(destIdx, 0, moved);
+      renderCards();
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  SUBMIT & RESULT
+// ══════════════════════════════════════════════
+function submitOrder(timedOut = false) {
+  if (submitted) return;
+  submitted = true;
+  stopTimer();
+
+  const correct = ROUNDS[roundIndex].events;
+  const isCorrect = !timedOut && currentOrder.every((ev, i) => ev.t === correct[i].t);
+
+  if (isCorrect) score++;
+
+  document.getElementById('submit-wrap').style.display = 'none';
+  renderCards(); // re-render disabled
+
+  const panel = document.getElementById('result-panel');
+  const box   = document.getElementById('result-box');
+  const hdg   = document.getElementById('result-heading');
+  const list  = document.getElementById('correct-list');
+  const fact  = document.getElementById('fun-fact-box');
+
+  box.className = 'result-box ' + (isCorrect ? 'correct' : timedOut ? 'timeout' : 'wrong');
+  hdg.className = 'result-heading ' + (isCorrect ? 'correct' : timedOut ? 'timeout' : 'wrong');
+  hdg.textContent = isCorrect ? 'Correct Order! 🎉' : timedOut ? "Time's Up! ⏰" : 'Wrong Order! 😅';
+
+  if (!isCorrect) {
+    list.innerHTML = '<p>The correct order was:</p>' +
+      correct.map((ev, i) => `<div class="cl-item"><span class="cl-num">${i+1}.</span><span>${ev.t}</span><span class="cl-year">(${ev.y < 0 ? Math.abs(ev.y)+' BC' : ev.y+' AD'})</span></div>`).join('');
+  } else {
+    list.innerHTML = '';
+  }
+
+  fact.textContent = ROUNDS[roundIndex].fact;
+
+  const nextBtn = document.getElementById('next-btn');
+  const isLast = roundIndex === ROUNDS.length - 1;
+  nextBtn.textContent = isLast ? 'See Final Score 🏆' : 'Next Round →';
+
+  panel.classList.add('visible');
+}
+
+function nextRound() {
+  if (roundIndex >= ROUNDS.length - 1) {
+    showFinal();
+  } else {
+    roundIndex++;
+    loadRound();
+  }
+}
+
+// ══════════════════════════════════════════════
+//  TIMER
+// ══════════════════════════════════════════════
+function startTimer() {
+  stopTimer();
+  timerSeconds = isHardMode ? timeLimitSec : 0;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    if (isHardMode) {
+      timerSeconds--;
+      updateTimerDisplay();
+      if (timerSeconds <= 0) { stopTimer(); submitOrder(true); }
+    } else {
+      timerSeconds++;
+      updateTimerDisplay();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(Math.abs(timerSeconds) / 60);
+  const s = Math.abs(timerSeconds) % 60;
+  document.getElementById('timer-val').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const pill = document.getElementById('timer-pill');
+  if (isHardMode) {
+    pill.className = 'pill' + (timerSeconds <= 10 ? ' danger' : timerSeconds <= 20 ? ' warning' : '');
+  } else {
+    pill.className = 'pill';
+  }
+}
+
+// ══════════════════════════════════════════════
+//  FINAL SCORE
+// ══════════════════════════════════════════════
+function showFinal() {
+  stopTimer();
+  const pct = Math.round((score / ROUNDS.length) * 100);
+  const messages = [
+    { min:100, text:"Perfect Score! You're a History Genius! 🧠", emoji:"🏆" },
+    { min:70,  text:"Great Job! You really know your history! 📚", emoji:"🌟" },
+    { min:40,  text:"Nice Try! Keep learning and you'll be a pro! 💪", emoji:"👍" },
+    { min:0,   text:"Don't give up! History is full of surprises! 🌍", emoji:"🎯" },
+  ];
+  const msg = messages.find(m => pct >= m.min);
+
+  document.getElementById('final-emoji').textContent = msg.emoji;
+  document.getElementById('final-msg').textContent   = msg.text;
+  document.getElementById('hard-badge').style.display = isHardMode ? '' : 'none';
+  document.getElementById('stat-score').textContent  = `${score}/${ROUNDS.length}`;
+  document.getElementById('stat-acc').textContent    = `${pct}%`;
+
+  // For hard mode show total time used (accumulated), for normal show elapsed
+  const totalSecs = isHardMode
+    ? ROUNDS.length * timeLimitSec  // just show total rounds × limit as a fun stat
+    : timerSeconds;
+  // Actually for both, show elapsed game time stored in a separate counter
+  // We'll use a global elapsed tracker
+  const elapsed = gameElapsed;
+  const em = Math.floor(elapsed/60), es = elapsed%60;
+  document.getElementById('stat-time').textContent = `${String(em).padStart(2,'0')}:${String(es).padStart(2,'0')}`;
+
+  showScreen('final-screen');
+}
+
+// ── track total game time elapsed ──
+let gameElapsed = 0, elapsedInterval = null;
+const _startGame = startGame;
+window.startGame = function() {
+  gameElapsed = 0;
+  clearInterval(elapsedInterval);
+  elapsedInterval = setInterval(() => gameElapsed++, 1000);
+  _startGame();
+};
+// patch showFinal to stop elapsed
+const _showFinal = showFinal;
+window.showFinal = function() {
+  clearInterval(elapsedInterval);
+  _showFinal();
+};
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function shuffle(arr) {
+  for (let i = arr.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  // ensure not same as original
+  const orig = ROUNDS[roundIndex]?.events;
+  if (orig && arr.every((e,i) => e.t === orig[i].t) && arr.length > 1) return shuffle(arr);
+  return arr;
+}
+</script>
+</body>
+</html>
