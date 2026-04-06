@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GeoQuiz 🌍 – Guess the Country!</title>
+  <link href__="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #fffbea; --card: #ffffff; --fg: #1e1040; --muted: #8b7eb8;
+      --border: #ddd6f3; --primary: #7c3aed; --pink: #e85d8a;
+      --blue: #22b8e0; --green: #22c55e; --orange: #f97316; --red: #ef4444;
+      --yellow: #fbbf24; --radius: 16px;
+    }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--fg); min-height: 100vh; overflow-x: hidden; }
+    h1, h2, h3, .fredoka { font-family: 'Fredoka', sans-serif; }
+    .floaters { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .floater { position: absolute; font-size: 2rem; opacity: 0.08; animation: floatAnim 5s ease-in-out infinite; }
+    @keyframes floatAnim { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-18px) rotate(8deg)} }
+    .screen { display: none; min-height: 100vh; position: relative; z-index: 1; }
+    .screen.active { display: flex; }
+    #home-screen { flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; }
+    .globe-ring { width:112px;height:112px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--green),var(--primary));display:flex;align-items:center;justify-content:center;font-size:3.2rem;margin:0 auto 1.5rem;box-shadow:0 12px 32px rgba(124,58,237,.3);animation:spin 20s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .home-title { font-size:clamp(2.8rem,8vw,4rem);font-weight:700;margin-bottom:.3rem; }
+    .home-sub { font-size:1.25rem;color:var(--muted);margin-bottom:.5rem; }
+    .home-desc { font-size:.9rem;color:#b0a8d4;margin-bottom:2.5rem;max-width:380px; }
+    .feature-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;max-width:400px;margin:0 auto 2.5rem; }
+    .feature-card { background:var(--card);border-radius:var(--radius);padding:1rem .75rem;box-shadow:0 4px 12px rgba(0,0,0,.06);border:1.5px solid var(--border); }
+    .feature-card .icon { font-size:1.6rem;margin-bottom:.4rem; }
+    .feature-card .label { font-family:'Fredoka',sans-serif;font-size:.75rem;font-weight:600; }
+    .btn { font-family:'Fredoka',sans-serif;font-size:1.2rem;font-weight:600;border:none;border-radius:var(--radius);cursor:pointer;transition:transform .15s,box-shadow .15s;display:inline-flex;align-items:center;justify-content:center;gap:.5rem; }
+    .btn:hover{transform:scale(1.04)} .btn:active{transform:scale(.96)}
+    .btn-primary { background:linear-gradient(135deg,var(--primary),var(--pink));color:#fff;padding:1rem 3rem;box-shadow:0 8px 24px rgba(124,58,237,.35); }
+    .btn-outline { background:transparent;color:var(--fg);border:2px solid var(--border);padding:.9rem 2rem; }
+    .btn-outline:hover{background:var(--border)}
+    .btn-full { width:100%; }
+    #game-screen { flex-direction:column;align-items:center;padding:1.5rem 1rem; }
+    .game-inner { width:100%;max-width:640px;display:flex;flex-direction:column;gap:1.2rem; }
+    .game-header { display:flex;justify-content:space-between;align-items:center; }
+    .game-logo { font-family:'Fredoka',sans-serif;font-size:1.6rem;font-weight:700; }
+    .score-badge { display:flex;align-items:center;gap:.4rem;background:rgba(251,191,36,.2);padding:.4rem 1rem;border-radius:999px;font-family:'Fredoka',sans-serif;font-size:1.1rem;font-weight:700; }
+    .progress-wrap { display:flex;flex-direction:column;gap:.3rem; }
+    .progress-labels { display:flex;justify-content:space-between;font-family:'Fredoka',sans-serif;font-size:.82rem;font-weight:500;color:var(--muted); }
+    .progress-track { height:14px;background:#e9e3ff;border-radius:999px;overflow:hidden; }
+    .progress-fill { height:100%;background:linear-gradient(90deg,var(--primary),var(--pink),var(--orange));border-radius:999px;transition:width .5s ease; }
+    .timer-row { display:flex;align-items:center;gap:.75rem; }
+    .timer-icon { font-size:1.3rem; }
+    .timer-track { flex:1;height:10px;background:#e9e3ff;border-radius:999px;overflow:hidden;min-width:100px; }
+    .timer-fill { height:100%;background:var(--green);border-radius:999px;transition:width .9s linear,background .3s; }
+    .timer-fill.low{background:var(--orange)} .timer-fill.critical{background:var(--red)}
+    .timer-label { font-family:'Fredoka',sans-serif;font-size:1.1rem;font-weight:700;min-width:38px;text-align:right; }
+    .question-card { background:var(--card);border-radius:24px;padding:1.8rem;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.08);border:2px solid var(--border);animation:slideUp .4s ease; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(24px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .diff-badge { display:inline-block;padding:.2rem .8rem;border-radius:999px;font-family:'Fredoka',sans-serif;font-size:.75rem;font-weight:600;margin-bottom:.8rem; }
+    .diff-easy{background:rgba(34,197,94,.15);color:var(--green)} .diff-medium{background:rgba(249,115,22,.15);color:var(--orange)} .diff-hard{background:rgba(232,93,138,.15);color:var(--pink)}
+    .q-emoji { font-size:3.5rem;margin-bottom:.8rem;display:block;animation:floatAnim 2s ease-in-out infinite; }
+    .q-clue { font-size:clamp(1rem,3.5vw,1.2rem);font-weight:700;line-height:1.5; }
+    .feedback-row { display:flex;flex-direction:column;align-items:center;gap:.3rem;min-height:80px;justify-content:center; }
+    .feedback-icon { width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;animation:bounceIn .45s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes bounceIn { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.25)} 100%{transform:scale(1);opacity:1} }
+    .feedback-icon.correct{background:var(--green)} .feedback-icon.wrong{background:var(--red)}
+    .feedback-text { font-family:'Fredoka',sans-serif;font-size:1.5rem;font-weight:700; }
+    .feedback-text.correct{color:var(--green)} .feedback-text.wrong{color:var(--red)}
+    .correct-ans { font-size:.85rem;color:var(--muted); }
+    .correct-ans strong{color:var(--fg)}
+    .fun-fact { background:rgba(251,191,36,.12);border:2px solid rgba(251,191,36,.4);border-radius:var(--radius);padding:1rem 1.2rem;display:flex;gap:.8rem;align-items:flex-start;animation:slideUp .4s ease; }
+    .fun-fact-icon { width:36px;height:36px;background:rgba(251,191,36,.3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0; }
+    .fun-fact-title { font-family:'Fredoka',sans-serif;font-size:.82rem;font-weight:600;color:#92711a;margin-bottom:.2rem; }
+    .fun-fact-text { font-size:.82rem;line-height:1.5;opacity:.85; }
+    .answers-grid { display:grid;grid-template-columns:1fr 1fr;gap:.8rem; }
+    @media(max-width:480px){.answers-grid{grid-template-columns:1fr}}
+    .ans-btn { display:flex;align-items:center;gap:.8rem;padding:1rem 1.2rem;border-radius:18px;border:none;cursor:pointer;font-family:'Fredoka',sans-serif;font-size:1.05rem;font-weight:600;color:#fff;text-align:left;box-shadow:0 6px 16px rgba(0,0,0,.12);transition:transform .15s,box-shadow .15s,opacity .2s;animation:slideUp .4s ease both; }
+    .ans-btn:hover:not(:disabled){transform:scale(1.03);box-shadow:0 10px 24px rgba(0,0,0,.2)} .ans-btn:active:not(:disabled){transform:scale(.97)} .ans-btn:disabled{cursor:not-allowed}
+    .ans-btn.color-0{background:linear-gradient(135deg,#7c3aed,#6026cc)} .ans-btn.color-1{background:linear-gradient(135deg,#e85d8a,#c73f6a)} .ans-btn.color-2{background:linear-gradient(135deg,#22b8e0,#1595bb)} .ans-btn.color-3{background:linear-gradient(135deg,#f97316,#d95d08)}
+    .ans-btn.is-correct{background:linear-gradient(135deg,#22c55e,#16a34a)!important;transform:scale(1.05);box-shadow:0 0 0 4px rgba(34,197,94,.35)!important}
+    .ans-btn.is-wrong{background:linear-gradient(135deg,#ef4444,#b91c1c)!important;box-shadow:0 0 0 4px rgba(239,68,68,.35)!important;animation:wiggle .4s ease!important}
+    .ans-btn.is-dimmed{opacity:.4}
+    @keyframes wiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+    .ans-label { width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;flex-shrink:0; }
+    #results-screen { align-items:center;justify-content:center;padding:2rem 1rem; }
+    .results-card { background:var(--card);border-radius:28px;padding:2.5rem 2rem;text-align:center;max-width:420px;width:100%;box-shadow:0 20px 56px rgba(0,0,0,.12);border:2px solid var(--border);animation:bounceIn .5s cubic-bezier(.34,1.56,.64,1); }
+    .trophy-ring { width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--yellow),var(--orange));display:flex;align-items:center;justify-content:center;font-size:2.8rem;margin:0 auto 1.2rem;box-shadow:0 8px 24px rgba(249,115,22,.35); }
+    .result-emoji{font-size:3.5rem;margin-bottom:.8rem} .result-title{font-family:'Fredoka',sans-serif;font-size:2.2rem;font-weight:700;margin-bottom:.3rem} .result-sub{font-size:.95rem;color:var(--muted);margin-bottom:1.5rem} .timeout-note{font-family:'Fredoka',sans-serif;font-size:.85rem;color:var(--orange);margin-bottom:1rem}
+    .score-box { background:#f3f0ff;border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem; }
+    .score-stars{font-size:1.1rem;margin-bottom:.5rem} .score-num{font-family:'Fredoka',sans-serif;font-size:3.5rem;font-weight:700} .score-pct{font-size:.85rem;color:var(--muted);margin-top:.2rem}
+    .score-bar-track{height:10px;background:var(--border);border-radius:999px;overflow:hidden;margin-top:1rem}
+    .score-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:999px;transition:width 1.2s ease .5s}
+    .result-btns{display:flex;flex-direction:column;gap:.8rem}
+    .hidden{display:none!important}
+  </style>
+</head>
+<body>
+  <div class="floaters" id="floaters"></div>
+
+  <div class="screen active" id="home-screen">
+    <div class="globe-ring">🌍</div>
+    <h1 class="home-title fredoka">GeoQuiz</h1>
+    <p class="home-sub">Guess the Country! 🌍</p>
+    <p class="home-desc">Test your geography knowledge with fun clues about countries around the world</p>
+    <div class="feature-grid">
+      <div class="feature-card"><div class="icon">📍</div><div class="label">15 Questions</div></div>
+      <div class="feature-card"><div class="icon">🏆</div><div class="label">Score Points</div></div>
+      <div class="feature-card"><div class="icon">🌐</div><div class="label">Learn Facts</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="startGame()">▶ Play Now!</button>
+  </div>
+
+  <div class="screen" id="game-screen">
+    <div class="game-inner">
+      <div class="game-header">
+        <div class="game-logo fredoka">GeoQuiz</div>
+        <div class="score-badge">⭐ <span id="score-val">0</span></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-labels"><span id="q-label">Question 1 of 15</span><span id="q-pct">7%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:7%"></div></div>
+      </div>
+      <div class="timer-row">
+        <span class="timer-icon" id="timer-icon">⏱️</span>
+        <div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+        <span class="timer-label" id="timer-label">45s</span>
+      </div>
+      <div class="question-card" id="question-card">
+        <span class="diff-badge" id="diff-badge">Easy</span>
+        <span class="q-emoji" id="q-emoji">🌍</span>
+        <p class="q-clue" id="q-clue">Loading...</p>
+      </div>
+      <div class="feedback-row hidden" id="feedback-row">
+        <div class="feedback-icon" id="feedback-icon"></div>
+        <div class="feedback-text" id="feedback-text"></div>
+        <div class="correct-ans hidden" id="correct-ans"></div>
+      </div>
+      <div class="fun-fact hidden" id="fun-fact">
+        <div class="fun-fact-icon">💡</div>
+        <div><div class="fun-fact-title">Fun Fact! 🤓</div><div class="fun-fact-text" id="fun-fact-text"></div></div>
+      </div>
+      <div class="answers-grid" id="answers-grid"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="results-screen">
+    <div class="results-card">
+      <div class="trophy-ring">🏆</div>
+      <div class="result-emoji" id="res-emoji">🤩</div>
+      <h2 class="result-title" id="res-title">Amazing!</h2>
+      <p class="result-sub" id="res-sub">You really know your countries!</p>
+      <p class="timeout-note hidden" id="timeout-note">⏱️ Time ran out!</p>
+      <div class="score-box">
+        <div class="score-stars">⭐ Your Score ⭐</div>
+        <div class="score-num" id="res-score">0/15</div>
+        <div class="score-pct" id="res-pct">0% correct</div>
+        <div class="score-bar-track"><div class="score-bar-fill" id="res-bar" style="width:0%"></div></div>
+      </div>
+      <div class="result-btns">
+        <button class="btn btn-primary btn-full" onclick="startGame()">🔄 Play Again!</button>
+        <button class="btn btn-outline btn-full" onclick="showScreen('home-screen')">🏠 Back to Home</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ALL_QUESTIONS = [
+      {clue:"This country has the Eiffel Tower and is famous for croissants! 🥐",emoji:"🗼",options:["Germany","France","Italy","Spain"],answer:"France",funFact:"The Eiffel Tower was supposed to be temporary! Built for the 1889 World's Fair, it was meant to be taken down after 20 years.",difficulty:"easy"},
+      {clue:"This country is home to kangaroos and koalas! 🐨",emoji:"🦘",options:["New Zealand","South Africa","Australia","Brazil"],answer:"Australia",funFact:"Australia has more kangaroos than people! There are about 50 million kangaroos hopping around.",difficulty:"easy"},
+      {clue:"This country has a wall so big you can see it from space! 🧱",emoji:"🏯",options:["Japan","China","India","Mongolia"],answer:"China",funFact:"The Great Wall of China is over 13,000 miles long — more than halfway around the Earth!",difficulty:"easy"},
+      {clue:"This country's capital is Tokyo and it's famous for sushi! 🍣",emoji:"🗾",options:["South Korea","Japan","Thailand","Vietnam"],answer:"Japan",funFact:"Japan has more than 6,800 islands! But most people live on just four of them.",difficulty:"easy"},
+      {clue:"This country has the Statue of Liberty and Hollywood! 🗽",emoji:"🎬",options:["Canada","United Kingdom","United States","Mexico"],answer:"United States",funFact:"The Statue of Liberty was a gift from France! It arrived in 350 pieces packed in 214 crates.",difficulty:"easy"},
+      {clue:"This African country has amazing pyramids and the Sphinx! 🐪",emoji:"🏛️",options:["Morocco","Egypt","Nigeria","Kenya"],answer:"Egypt",funFact:"The Great Pyramid of Giza is made of about 2.3 million stone blocks, each weighing about 2.5 tons!",difficulty:"medium"},
+      {clue:"This South American country has the Amazon Rainforest and loves football! ⚽",emoji:"🌴",options:["Argentina","Colombia","Brazil","Peru"],answer:"Brazil",funFact:"The Amazon Rainforest produces 20% of the world's oxygen — it's called the 'lungs of the Earth'!",difficulty:"medium"},
+      {clue:"This country looks like a boot on the map and invented pizza! 🍕",emoji:"👢",options:["Greece","Spain","Italy","Portugal"],answer:"Italy",funFact:"Italy has a free wine fountain! In Caldari di Ortona, it runs red wine 24/7 for anyone to enjoy.",difficulty:"medium"},
+      {clue:"This country has the Taj Mahal and is home to Bollywood movies! 🎭",emoji:"🕌",options:["Pakistan","India","Bangladesh","Sri Lanka"],answer:"India",funFact:"India's Bollywood makes more movies per year than Hollywood — over 1,500 films annually!",difficulty:"medium"},
+      {clue:"This country is known as the 'Land of the Rising Sun' and has bullet trains! 🚄",emoji:"🌅",options:["China","South Korea","Japan","Taiwan"],answer:"Japan",funFact:"Japan's bullet trains are so punctual that if they're one minute late, passengers get a delay certificate!",difficulty:"medium"},
+      {clue:"This country has fjords, the Northern Lights, and is in Scandinavia! 🌌",emoji:"❄️",options:["Sweden","Finland","Norway","Denmark"],answer:"Norway",funFact:"Norway has a town called 'Hell' — and yes, it freezes over every winter! 🥶",difficulty:"hard"},
+      {clue:"This island country in the Indian Ocean is the 4th largest island in the world! 🦎",emoji:"🏝️",options:["Sri Lanka","Madagascar","Indonesia","Philippines"],answer:"Madagascar",funFact:"About 90% of animals in Madagascar are found nowhere else on Earth — like a real-life alien planet!",difficulty:"hard"},
+      {clue:"This tiny European country is famous for chocolate, watches, and mountains! ⛰️",emoji:"🍫",options:["Austria","Belgium","Switzerland","Luxembourg"],answer:"Switzerland",funFact:"Switzerland has enough nuclear bunkers to shelter its entire population! Safety first! 🛡️",difficulty:"hard"},
+      {clue:"This country's flag has a maple leaf and has the second largest land area on Earth! 🍁",emoji:"🏔️",options:["Russia","Canada","United States","Greenland"],answer:"Canada",funFact:"Canada has more lakes than all other countries combined — over 60% of the world's lakes!",difficulty:"hard"},
+      {clue:"This South American country has Machu Picchu, an ancient Inca city in the clouds! 🏔️",emoji:"🦙",options:["Chile","Bolivia","Ecuador","Peru"],answer:"Peru",funFact:"Peru has a rainbow mountain! Vinicunca Mountain has colorful stripes from different minerals in the soil.",difficulty:"hard"}
+    ];
+    const TOTAL_TIME=45,LABELS=["A","B","C","D"],BG=["🌍","🗺️","✈️","🏔️","🌊","🌴","🏛️","🗼","🦘","🍕"];
+    let questions=[],currentIdx=0,score=0,timeLeft=TOTAL_TIME,timerInterval=null,answered=false;
+    function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+    function getQ(){const e=shuffle(ALL_QUESTIONS.filter(q=>q.difficulty==="easy")),m=shuffle(ALL_QUESTIONS.filter(q=>q.difficulty==="medium")),h=shuffle(ALL_QUESTIONS.filter(q=>q.difficulty==="hard"));return[...e,...m,...h]}
+    function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active")}
+    function playTone(f,t,d){try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=t||"sine";o.frequency.setValueAtTime(f,c.currentTime);g.gain.setValueAtTime(.3,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);o.start(c.currentTime);o.stop(c.currentTime+d)}catch(e){}}
+    function playCorrect(){playTone(523,"sine",.15);setTimeout(()=>playTone(659,"sine",.2),130);setTimeout(()=>playTone(784,"sine",.3),260)}
+    function playWrong(){playTone(330,"sawtooth",.12);setTimeout(()=>playTone(220,"sawtooth",.25),100)}
+    function initFloaters(){const c=document.getElementById("floaters");c.innerHTML="";BG.forEach((em,i)=>{const el=document.createElement("div");el.className="floater";el.textContent=em;el.style.left=`${(i*11+4)%92}%`;el.style.top=`${(i*17+8)%88}%`;el.style.animationDelay=`${i*.35}s`;el.style.animationDuration=`${4+i*.4}s`;c.appendChild(el)})}
+    function startTimer(){clearInterval(timerInterval);timeLeft=TOTAL_TIME;updateTimerUI();timerInterval=setInterval(()=>{timeLeft--;updateTimerUI();if(timeLeft<=0){clearInterval(timerInterval);endGame(true)}},1000)}
+    function stopTimer(){clearInterval(timerInterval)}
+    function updateTimerUI(){const p=(timeLeft/TOTAL_TIME)*100,f=document.getElementById("timer-fill"),l=document.getElementById("timer-label"),ic=document.getElementById("timer-icon");f.style.width=p+"%";l.textContent=timeLeft+"s";f.classList.remove("low","critical");l.style.color="";ic.textContent="⏱️";if(timeLeft<=5){f.classList.add("critical");l.style.color="var(--red)";ic.textContent="🚨"}else if(timeLeft<=10){f.classList.add("low");l.style.color="var(--orange)";ic.textContent="⏰"}}
+    function updateProgressUI(){const p=Math.round(((currentIdx+1)/questions.length)*100);document.getElementById("q-label").textContent=`Question ${currentIdx+1} of ${questions.length}`;document.getElementById("q-pct").textContent=p+"%";document.getElementById("progress-fill").style.width=p+"%"}
+    function renderQuestion(){answered=false;const q=questions[currentIdx];const db=document.getElementById("diff-badge");db.textContent=q.difficulty.charAt(0).toUpperCase()+q.difficulty.slice(1);db.className=`diff-badge diff-${q.difficulty}`;document.getElementById("q-emoji").textContent=q.emoji;document.getElementById("q-clue").textContent=q.clue;const card=document.getElementById("question-card");card.style.animation="none";card.offsetHeight;card.style.animation="";document.getElementById("feedback-row").classList.add("hidden");document.getElementById("fun-fact").classList.add("hidden");document.getElementById("correct-ans").classList.add("hidden");const opts=shuffle(q.options);const grid=document.getElementById("answers-grid");grid.innerHTML="";opts.forEach((opt,i)=>{const btn=document.createElement("button");btn.className=`ans-btn color-${i}`;btn.style.animationDelay=`${i*.08}s`;btn.innerHTML=`<span class="ans-label">${LABELS[i]}</span>${opt}`;btn.dataset.opt=opt;btn.onclick=()=>handleAnswer(opt,btn,q);grid.appendChild(btn)});updateProgressUI()}
+    function handleAnswer(chosen,clickedBtn,q){if(answered)return;answered=true;stopTimer();const correct=chosen===q.answer;if(correct){score++;document.getElementById("score-val").textContent=score;playCorrect()}else{playWrong()}document.querySelectorAll(".ans-btn").forEach(btn=>{btn.disabled=true;const opt=btn.dataset.opt;if(opt===q.answer)btn.classList.add("is-correct");else if(btn===clickedBtn&&!correct)btn.classList.add("is-wrong");else btn.classList.add("is-dimmed")});const row=document.getElementById("feedback-row");row.classList.remove("hidden");const icon=document.getElementById("feedback-icon"),text=document.getElementById("feedback-text"),cans=document.getElementById("correct-ans");icon.textContent=correct?"✅":"❌";icon.className=`feedback-icon ${correct?"correct":"wrong"}`;text.textContent=correct?"Correct! 🎉":"Wrong! 😅";text.className=`feedback-text ${correct?"correct":"wrong"}`;if(!correct){cans.innerHTML=`The answer was <strong>${q.answer}</strong>`;cans.classList.remove("hidden")}setTimeout(()=>{document.getElementById("fun-fact-text").textContent=q.funFact;document.getElementById("fun-fact").classList.remove("hidden")},600);setTimeout(()=>{if(currentIdx+1>=questions.length){endGame(false)}else{currentIdx++;renderQuestion();startTimer()}},2500)}
+    function endGame(timedOut){stopTimer();const total=questions.length,pct=Math.round((score/total)*100);let msg,emoji,sub;if(pct===100){msg="PERFECT SCORE! 🏆";emoji="🤩";sub="You're a geography genius!"}else if(pct>=80){msg="Amazing! 🌟";emoji="😎";sub="You really know your countries!"}else if(pct>=60){msg="Great Job! 👏";emoji="😄";sub="You're getting good at this!"}else if(pct>=40){msg="Nice Try! 💪";emoji="🙂";sub="Keep exploring the world!"}else{msg="Keep Learning! 📚";emoji="🤓";sub="Every explorer starts somewhere!"}document.getElementById("res-emoji").textContent=emoji;document.getElementById("res-title").textContent=msg;document.getElementById("res-sub").textContent=sub;document.getElementById("res-score").textContent=`${score}/${total}`;document.getElementById("res-pct").textContent=`${pct}% correct`;const note=document.getElementById("timeout-note");timedOut?note.classList.remove("hidden"):note.classList.add("hidden");const bar=document.getElementById("res-bar");bar.style.width="0%";showScreen("results-screen");requestAnimationFrame(()=>requestAnimationFrame(()=>{bar.style.width=pct+"%"}))}
+    function startGame(){questions=getQ();currentIdx=0;score=0;document.getElementById("score-val").textContent=0;showScreen("game-screen");renderQuestion();startTimer()}
+    initFloaters();
+  </script>
+</body>
+</html>
